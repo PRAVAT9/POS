@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Location } from '../types';
 import { Truck, Package, Check, Clock, Plus, X, ArrowRight } from 'lucide-react';
 
-const LOCATIONS: Location[] = ['Main', 'shop', 'Shop'];
+const LOCATIONS: Location[] = ['Main', 'shop'];
 
 export default function ShipmentManager({ isAdmin }: { isAdmin?: boolean }) {
   const { products, shipments, createShipment, receiveShipment, user, pendingShipments } = useApp();
@@ -11,7 +11,7 @@ export default function ShipmentManager({ isAdmin }: { isAdmin?: boolean }) {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState('');
   const [fromLocation, setFromLocation] = useState<Location>('shop');
-  const [toLocation, setToLocation] = useState<Location>('Shop');
+  const [toLocation, setToLocation] = useState<Location>('shop');
   const [message, setMessage] = useState({ text: '', type: '' });
 
   const handleCreateShipment = async (e: React.FormEvent) => {

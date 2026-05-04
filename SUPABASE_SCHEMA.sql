@@ -96,6 +96,13 @@ insert into local_users (username, password_hash, role, name, location)
 ALTER TABLE IF EXISTS products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS shipments ENABLE ROW LEVEL SECURITY;
+
+-- SHIPMENTS: allow public select for demo read-only access
+CREATE POLICY IF NOT EXISTS "public_select_shipments"
+  ON shipments
+  FOR SELECT
+  USING (true);
+
 ALTER TABLE IF EXISTS local_users ENABLE ROW LEVEL SECURITY;
 
 -- Allow public (anon) to read products only

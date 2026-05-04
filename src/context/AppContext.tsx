@@ -83,9 +83,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, async () => { await refresh(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'shipments' }, async () => { await refresh(); });
 
-      channel.subscribe();
-      // mark subscription as attempted; if no error thrown we'll consider it connected for UI purposes
-      setRealtimeConnected(true);
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeConnected(true);
+        } else {
+          setRealtimeConnected(false);
+          console.error('Realtime subscription failed with status:', status);
+        }
+      });
       // eslint-disable-next-line no-console
       console.log('Supabase realtime channel subscribed');
     } catch (err) {
@@ -156,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProductFn = async (id: string) => {
-    store.deleteProduct(id);
+    await store.deleteProduct(id);
     await refresh();
   };
 
@@ -186,7 +191,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserPasswordFn = async (userId: string, password: string) => {
-    store.updateUserPassword(userId, password);
+    await store.updateUserPassword(userId, password);
     await refresh();
   };
 
