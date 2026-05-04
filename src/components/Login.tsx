@@ -1,27 +1,31 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Store } from 'lucide-react';
+import { Store, LogIn } from 'lucide-react';
 
 export default function Login() {
   const { login } = useApp();
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [salesLoading, setSalesLoading] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleQuickEntry = async (role: 'admin' | 'sales') => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    role === 'admin' ? setAdminLoading(true) : setSalesLoading(true);
-    
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter both username and password.');
+      return;
+    }
+    setLoading(true);
     try {
-      // Automatically sends 'admin' or 'sales' as both username and password
-      const user = await login(role, role);
+      const user = await login(username.trim(), password.trim());
       if (!user) {
-        setError('Login failed. Ensure users exist in your Supabase table.');
+        setError('Invalid username or password.');
       }
     } catch (err: any) {
       setError(err.message || 'Server connection error.');
     } finally {
-      role === 'admin' ? setAdminLoading(false) : setSalesLoading(false);
+      setLoading(false);
     }
   };
 
@@ -37,7 +41,7 @@ export default function Login() {
         </div>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-6 text-center">Quick Access</h2>
+          <h2 className="text-xl font-semibold text-white mb-6 text-center">Sign In</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm text-center">
@@ -45,27 +49,38 @@ export default function Login() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm text-blue-200/80 mb-1">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter username"
+                autoComplete="username"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-blue-200/80 mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter password"
+                autoComplete="current-password"
+              />
+            </div>
             <button
-              onClick={() => handleQuickEntry('admin')}
-              disabled={adminLoading || salesLoading}
-              className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all"
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             >
-              {adminLoading ? 'Entering Dashboard...' : 'Continue as Admin'}
+              <LogIn className="w-4 h-4" />
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
-
-            <button
-              onClick={() => handleQuickEntry('sales')}
-              disabled={adminLoading || salesLoading}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all"
-            >
-              {salesLoading ? 'Opening Sales App...' : 'Continue as Sales'}
-            </button>
-          </div>
-          
-          <p className="mt-6 text-center text-xs text-blue-200/40">
-            One-tap access enabled for authorized devices.
-          </p>
+          </form>
         </div>
       </div>
     </div>

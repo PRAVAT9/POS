@@ -65,27 +65,53 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// --- FIXED LOGIN & VERIFY ---
+// --- LOGIN & VERIFY ---
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const { data } = await supabaseAdmin.from('local_users').select('*').eq('username', username).single();
-  const hashedPassword = hashPassword(password);
-  // Support both hashed and plain text passwords for backward compatibility
-  const passwordMatches = data && (data.password_hash === hashedPassword || data.password_hash === password);
-  if (passwordMatches) {
-    const token = jwt.sign({ id: data.id, username: data.username, role: data.role, name: data.name }, JWT_SECRET, { expiresIn: '12h' });
-    return res.json({ token, user: data });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
   }
-  res.status(401).json({ error: 'Invalid credentials' });
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('local_users')
+      .select('id, username, role, name, password_hash')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (error || !data) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (data.password_hash !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = {
+      id: data.id,
+      username: data.username,
+      role: data.role,
+      name: data.name,
+    };
+
+    const token = jwt.sign(user, JWT_SECRET, { expiresIn: '12h' });
+    return res.json({ token, user });
+  } catch (err) {
+    return res.status(500).json({ error: 'Login failed' });
+  }
 });
 
 app.post('/api/verify-role', async (req, res) => {
   const { role, password } = req.body;
-  const { data } = await supabaseAdmin.from('local_users').select('*').eq('role', role);
-  const hashedPassword = hashPassword(password);
-  // Support both hashed and plain text passwords for backward compatibility
-  const match = (data || []).find(u => u.password_hash === hashedPassword || u.password_hash === password);
-  if (match) return res.json({ ok: true, user: match });
+  const { data } = await supabaseAdmin
+    .from('local_users')
+    .select('id, username, role, name, password_hash')
+    .eq('role', role);
+  const match = (data || []).find(u => u.password_hash === password);
+  if (match) {
+    const { password_hash, ...user } = match;
+    return res.json({ ok: true, user });
+  }
   res.status(401).json({ error: 'Invalid' });
 });
 
