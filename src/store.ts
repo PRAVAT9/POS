@@ -184,13 +184,12 @@ export async function login(username: string, password: string): Promise<User | 
     }
   }
 
-  // Fallback: authenticate against Supabase local_users table
+  // Fallback: authenticate against Supabase local_users table (plain text)
   try {
     const { data, error } = await supabase.from('local_users').select('*').eq('username', username).limit(1).maybeSingle();
     if (!error && data) {
       const u: any = data;
-      const hashed = hashPassword(password);
-      if (hashed === (u.password_hash || u.password)) {
+      if (password === (u.password_hash || u.password)) {
         const user: User = { id: u.id, username: u.username, password: '', role: u.role, name: u.name, location: u.location };
         setCurrentUser(user);
         return user;

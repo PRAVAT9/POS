@@ -68,6 +68,7 @@ function authMiddleware(req, res, next) {
 // --- LOGIN & VERIFY ---
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log('[LOGIN] Received:', { username, password });
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
@@ -79,11 +80,16 @@ app.post('/api/login', async (req, res) => {
       .eq('username', username)
       .maybeSingle();
 
+    console.log('[LOGIN] DB result:', { data, error });
+
     if (error || !data) {
+      console.log('[LOGIN] No user found or DB error');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    console.log('[LOGIN] Comparing password_hash:', data.password_hash, 'with provided:', password);
     if (data.password_hash !== password) {
+      console.log('[LOGIN] Password mismatch');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -95,8 +101,10 @@ app.post('/api/login', async (req, res) => {
     };
 
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '12h' });
+    console.log('[LOGIN] Success for user:', username);
     return res.json({ token, user });
   } catch (err) {
+    console.error('[LOGIN] Exception:', err);
     return res.status(500).json({ error: 'Login failed' });
   }
 });
