@@ -8,18 +8,18 @@ export default function Login() {
   const [salesLoading, setSalesLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const quickLogin = async (username: string, password: string, role: 'admin' | 'sales') => {
+  const handleQuickEntry = async (role: 'admin' | 'sales') => {
     setError('');
     role === 'admin' ? setAdminLoading(true) : setSalesLoading(true);
     
     try {
-      const user = await login(username, password);
+      // Automatically sends 'admin' or 'sales' as both username and password
+      const user = await login(role, role);
       if (!user) {
-        setError('Invalid credentials. Check your Supabase table.');
+        setError('Login failed. Ensure users exist in your Supabase table.');
       }
     } catch (err: any) {
-      // This catches the 401 error and displays a helpful message
-      setError(err.message || 'Login failed. Server might be unreachable.');
+      setError(err.message || 'Server connection error.');
     } finally {
       role === 'admin' ? setAdminLoading(false) : setSalesLoading(false);
     }
@@ -37,7 +37,7 @@ export default function Login() {
         </div>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-white mb-6">Continue As</h2>
+          <h2 className="text-xl font-semibold text-white mb-6 text-center">Quick Access</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-200 text-sm text-center">
@@ -47,27 +47,25 @@ export default function Login() {
 
           <div className="space-y-4">
             <button
-              onClick={() => {
-                const pwd = window.prompt('Enter admin password');
-                if (pwd) quickLogin('admin', pwd, 'admin');
-              }}
+              onClick={() => handleQuickEntry('admin')}
               disabled={adminLoading || salesLoading}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:brightness-110 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all"
             >
-              {adminLoading ? 'Verifying Admin...' : 'Continue as Admin'}
+              {adminLoading ? 'Entering Dashboard...' : 'Continue as Admin'}
             </button>
 
             <button
-              onClick={() => {
-                const pwd = window.prompt('Enter sales password');
-                if (pwd) quickLogin('sales', pwd, 'sales');
-              }}
+              onClick={() => handleQuickEntry('sales')}
               disabled={adminLoading || salesLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:brightness-110 disabled:opacity-50 transition-all"
+              className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all"
             >
-              {salesLoading ? 'Verifying Sales...' : 'Continue as Sales'}
+              {salesLoading ? 'Opening Sales App...' : 'Continue as Sales'}
             </button>
           </div>
+          
+          <p className="mt-6 text-center text-xs text-blue-200/40">
+            One-tap access enabled for authorized devices.
+          </p>
         </div>
       </div>
     </div>
